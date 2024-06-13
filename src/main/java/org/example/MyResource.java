@@ -20,17 +20,16 @@ public class MyResource {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    @Path("managerLogin")
-    public Response managerLogin(String userData) {
+    @Path("adminLogin")
+    public Response adminLogin(String userData) {
         JSONObject json = new JSONObject(userData);
         String email = json.getString("email");
         String password = json.getString("password");
 
-        User user = new User(email, password);
-        Manager signedInManager = Manager.login(user);
+        Admin signedInAdmin = Admin.login(email, password);
         JSONObject responseJson = new JSONObject();
-        if (signedInManager != null) {
-            responseJson.put("signedInManager", signedInManager.getEmail());
+        if (signedInAdmin != null) {
+            responseJson.put("signedInAdmin", signedInAdmin.getEmail());
         }
         return Response.ok(responseJson.toString(), MediaType.APPLICATION_JSON).build();
     }
@@ -38,17 +37,44 @@ public class MyResource {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    @Path("getManagerActions")
-    public Response fetchManagerActions(String reqData) {
-        JSONObject json = new JSONObject(reqData);
+    @Path("userLogin")
+    public Response userLogin(String userData) {
+        JSONObject json = new JSONObject(userData);
         String email = json.getString("email");
+        String password = json.getString("password");
 
-        String managerActions = Manager.fetchManagerActions(email);
+        User signedInUser = User.login(email, password);
         JSONObject responseJson = new JSONObject();
-        if (managerActions != null) {
-            responseJson.put("managerActions", managerActions);
+        if (signedInUser != null) {
+            Gson gson = new Gson();
+            JsonElement usersJson = gson.toJsonTree(signedInUser);
+            return Response.ok(usersJson.toString(), MediaType.APPLICATION_JSON).build();
         }
         return Response.ok(responseJson.toString(), MediaType.APPLICATION_JSON).build();
+    }
+
+    @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Path("addUser")
+    public Response addUser(String reqData) {
+        JSONObject json = new JSONObject(reqData);
+        String firstName = json.getString("firstName");
+        String lastName = json.getString("lastName");
+        String mobile = json.getString("mobile");
+        String email = json.getString("email");
+        String password = json.getString("password");
+        String interests = json.getString("interests");
+        String userAddedResponse = User.addUser(firstName, lastName, mobile, email, password, interests);
+        JSONObject responseJson = new JSONObject();
+        if (userAddedResponse.equals("true")) {
+            responseJson.put("success", "true");
+            return Response.ok(responseJson.toString(), MediaType.APPLICATION_JSON).build();
+        } else {
+            responseJson.put("failure", "true");
+            responseJson.put("errorMessage", userAddedResponse);
+            return Response.ok(responseJson.toString(), MediaType.APPLICATION_JSON).build();
+        }
     }
 
     @GET
@@ -153,44 +179,13 @@ public class MyResource {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    @Path("customerLogin")
-    public Response customerLogin(String userData) {
-        JSONObject json = new JSONObject(userData);
-        String email = json.getString("email");
-        String password = json.getString("password");
-
-        User user = new User(email, password);
-        Customer signedInCustomer = Customer.login(user);
-        JSONObject responseJson = new JSONObject();
-        if (signedInCustomer != null) {
-            Gson gson = new Gson();
-            JsonElement customersJson = gson.toJsonTree(signedInCustomer);
-            return Response.ok(customersJson.toString(), MediaType.APPLICATION_JSON).build();
-        }
-        return Response.ok(responseJson.toString(), MediaType.APPLICATION_JSON).build();
-    }
-
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Path("getCustomers")
-    public Response fetchCustomers() {
-        List<Customer> customers = Customer.fetchCustomers();
-        Gson gson = new Gson();
-        JsonElement customersJson = gson.toJsonTree(customers);
-        return Response.ok(customersJson.toString(), MediaType.APPLICATION_JSON).build();
-    }
-
-    @POST
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
     @Path("getCustomerById")
     public Response fetchCustomerById(String reqData) {
         JSONObject json = new JSONObject(reqData);
         String customerId = json.getString("customerId");
-        Customer customer = Customer.fetchCustomerById(customerId);
+        User user = User.fetchCustomerById(customerId);
         Gson gson = new Gson();
-        JsonElement customerJsonElement = gson.toJsonTree(customer);
+        JsonElement customerJsonElement = gson.toJsonTree(user);
         if (customerJsonElement.isJsonObject()) {
             JsonObject customerJsonObject = customerJsonElement.getAsJsonObject();
             customerJsonObject.addProperty("success", "true");
@@ -203,141 +198,46 @@ public class MyResource {
         }
     }
 
-    @POST
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Path("addCustomer")
-    public Response addCustomer(String reqData) {
-        JSONObject json = new JSONObject(reqData);
-        String fullName = json.getString("fullName");
-        String mobile = json.getString("mobile");
-        String email = json.getString("email");
-        String password = json.getString("password");
-        String address = json.getString("address");
-        String customerAddedResponse = Customer.addCustomer(fullName, mobile, email, password, address);
-        JSONObject responseJson = new JSONObject();
-        if (customerAddedResponse.equals("true")) {
-            responseJson.put("success", "true");
-            return Response.ok(responseJson.toString(), MediaType.APPLICATION_JSON).build();
-        } else {
-            responseJson.put("failure", "true");
-            responseJson.put("errorMessage", customerAddedResponse);
-            return Response.ok(responseJson.toString(), MediaType.APPLICATION_JSON).build();
-        }
-    }
+//    @POST
+//    @Produces(MediaType.APPLICATION_JSON)
+//    @Consumes(MediaType.APPLICATION_JSON)
+//    @Path("editCustomer")
+//    public Response editCustomer(String reqData) {
+//        JSONObject json = new JSONObject(reqData);
+//        String customerId = json.getString("customerId");
+//        String fullName = json.getString("fullName");
+//        String mobile = json.getString("mobile");
+//        String email = json.getString("email");
+//        String password = json.getString("password");
+//        String address = json.getString("address");
+//        String customerEditedResponse = User.editCustomer(customerId, fullName, mobile, email, password, address);
+//        JSONObject responseJson = new JSONObject();
+//        if (customerEditedResponse.equals("true")) {
+//            responseJson.put("success", "true");
+//            return Response.ok(responseJson.toString(), MediaType.APPLICATION_JSON).build();
+//        } else {
+//            responseJson.put("failure", "true");
+//            responseJson.put("errorMessage", customerEditedResponse);
+//            return Response.ok(responseJson.toString(), MediaType.APPLICATION_JSON).build();
+//        }
+//    }
 
-    @POST
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Path("editCustomer")
-    public Response editCustomer(String reqData) {
-        JSONObject json = new JSONObject(reqData);
-        String customerId = json.getString("customerId");
-        String fullName = json.getString("fullName");
-        String mobile = json.getString("mobile");
-        String email = json.getString("email");
-        String password = json.getString("password");
-        String address = json.getString("address");
-        String customerEditedResponse = Customer.editCustomer(customerId, fullName, mobile, email, password, address);
-        JSONObject responseJson = new JSONObject();
-        if (customerEditedResponse.equals("true")) {
-            responseJson.put("success", "true");
-            return Response.ok(responseJson.toString(), MediaType.APPLICATION_JSON).build();
-        } else {
-            responseJson.put("failure", "true");
-            responseJson.put("errorMessage", customerEditedResponse);
-            return Response.ok(responseJson.toString(), MediaType.APPLICATION_JSON).build();
-        }
-    }
-
-    @POST
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Path("removeCustomer")
-    public Response removeCustomer(String reqData) {
-        JSONObject json = new JSONObject(reqData);
-        String customerId = json.getString("customerId");
-        String customerRemovedResponse = Customer.removeCustomer(customerId);
-        JSONObject responseJson = new JSONObject();
-        if (customerRemovedResponse.equals("true")) {
-            responseJson.put("success", "true");
-            return Response.ok(responseJson.toString(), MediaType.APPLICATION_JSON).build();
-        } else {
-            responseJson.put("failure", "true");
-            responseJson.put("errorMessage", customerRemovedResponse);
-            return Response.ok(responseJson.toString(), MediaType.APPLICATION_JSON).build();
-        }
-    }
-
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Path("getManagers")
-    public Response fetchManagers() {
-        List<Manager> managers = Manager.fetchManagers();
-        Gson gson = new Gson();
-        JsonElement managersJson = gson.toJsonTree(managers);
-        return Response.ok(managersJson.toString(), MediaType.APPLICATION_JSON).build();
-    }
-
-    @POST
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Path("getManagerByEmail")
-    public Response fetchManagerByEmail(String reqData) {
-        JSONObject json = new JSONObject(reqData);
-        String email = json.getString("email");
-        Manager manager = Manager.fetchManagerByEmail(email);
-        Gson gson = new Gson();
-        JsonElement managerJsonElement = gson.toJsonTree(manager);
-        if (managerJsonElement.isJsonObject()) {
-            JsonObject managerJsonObject = managerJsonElement.getAsJsonObject();
-            managerJsonObject.addProperty("success", "true");
-            return Response.ok(gson.toJson(managerJsonElement), MediaType.APPLICATION_JSON).build();
-        } else {
-            JsonObject resp = new JsonObject();
-            resp.addProperty("error", "true");
-            resp.addProperty("errorMessage", "Couldn't fetch manager");
-            return Response.ok(gson.toJson(resp), MediaType.APPLICATION_JSON).build();
-        }
-    }
-
-    @POST
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Path("addManager")
-    public Response addManager(String reqData) {
-        JSONObject json = new JSONObject(reqData);
-        String email = json.getString("email");
-        String password = json.getString("password");
-        String managerAddedResponse = Manager.addManager(email, password);
-        JSONObject responseJson = new JSONObject();
-        if (managerAddedResponse.equals("true")) {
-            responseJson.put("success", "true");
-            return Response.ok(responseJson.toString(), MediaType.APPLICATION_JSON).build();
-        } else {
-            responseJson.put("failure", "true");
-            responseJson.put("errorMessage", managerAddedResponse);
-            return Response.ok(responseJson.toString(), MediaType.APPLICATION_JSON).build();
-        }
-    }
-
-    @POST
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Path("removeManager")
-    public Response removeManager(String reqData) {
-        JSONObject json = new JSONObject(reqData);
-        String email = json.getString("email");
-        String managerRemovedResponse = Manager.removeManager(email);
-        JSONObject responseJson = new JSONObject();
-        if (managerRemovedResponse.equals("true")) {
-            responseJson.put("success", "true");
-            return Response.ok(responseJson.toString(), MediaType.APPLICATION_JSON).build();
-        } else {
-            responseJson.put("failure", "true");
-            responseJson.put("errorMessage", managerRemovedResponse);
-            return Response.ok(responseJson.toString(), MediaType.APPLICATION_JSON).build();
-        }
-    }
+//    @POST
+//    @Produces(MediaType.APPLICATION_JSON)
+//    @Consumes(MediaType.APPLICATION_JSON)
+//    @Path("removeCustomer")
+//    public Response removeCustomer(String reqData) {
+//        JSONObject json = new JSONObject(reqData);
+//        String customerId = json.getString("customerId");
+//        String customerRemovedResponse = User.removeCustomer(customerId);
+//        JSONObject responseJson = new JSONObject();
+//        if (customerRemovedResponse.equals("true")) {
+//            responseJson.put("success", "true");
+//            return Response.ok(responseJson.toString(), MediaType.APPLICATION_JSON).build();
+//        } else {
+//            responseJson.put("failure", "true");
+//            responseJson.put("errorMessage", customerRemovedResponse);
+//            return Response.ok(responseJson.toString(), MediaType.APPLICATION_JSON).build();
+//        }
+//    }
 }
