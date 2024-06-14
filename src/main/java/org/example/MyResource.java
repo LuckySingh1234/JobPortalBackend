@@ -80,6 +80,45 @@ public class MyResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
+    @Path("getAllCompanies")
+    public Response getAllCompanies() {
+        List<Company> allCompanies = Company.fetchAllCompanies();
+        Gson gson = new Gson();
+        JsonElement companyJson = gson.toJsonTree(allCompanies);
+        return Response.ok(companyJson.toString(), MediaType.APPLICATION_JSON).build();
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Path("getCompanyById")
+    public Response getCompanyById(@QueryParam("id") String companyId) {
+        Company company = Company.fetchCompanyById(companyId);
+        Gson gson = new Gson();
+        JsonElement companyJson = gson.toJsonTree(company);
+        return Response.ok(companyJson.toString(), MediaType.APPLICATION_JSON).build();
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Path("getAllJobsByCompanyId")
+    public Response getAllJobsByCompanyId(@QueryParam("id") String companyId) {
+        List<Job> allJobs = Job.fetchAllJobByCompanyId(companyId);
+        Gson gson = new Gson();
+        JsonElement jobsJson = gson.toJsonTree(allJobs);
+        return Response.ok(jobsJson.toString(), MediaType.APPLICATION_JSON).build();
+    }
+
+
+
+
+
+
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
     @Path("getProductsByCategory")
     public Response fetchProductsByCategory(@QueryParam("category") String category) {
         List<Product> products = Product.fetchProductsByCategory(category);
