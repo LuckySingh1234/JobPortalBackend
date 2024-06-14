@@ -6,10 +6,15 @@ import lombok.NoArgsConstructor;
 import org.apache.poi.ss.usermodel.*;
 
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.example.Constant.DATABASE;
+import static org.example.Constant.*;
+import static org.example.Constant.EMAIL_REGEX;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -61,5 +66,68 @@ public class Job {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public static String addJob(String companyId, String jobTitle, String jobDescription, String jobPackage, String experience, String skills) {
+        List<String> storedJobIds = new ArrayList<>();
+        try {
+            Workbook workbook;
+            if (Files.exists(Paths.get(DATABASE))) {
+                FileInputStream fis = new FileInputStream(DATABASE);
+                workbook = WorkbookFactory.create(fis);
+                Sheet sheet = workbook.getSheet(JOB_SHEET_NAME);
+                StringBuilder excelErrors = new StringBuilder();
+                if (sheet != null) {
+                    for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+                        Row row = sheet.getRow(i);
+                        Cell cell = row.getCell(0);
+                        String storedJobId = cell.getStringCellValue();
+                        storedJobIds.add(storedJobId);
+                    }
+
+                    List<Integer> allJobIds = new ArrayList<>(storedJobIds.stream().map(id -> id.split("#")[1])
+                            .map(Integer::parseInt)
+                            .toList());
+                    allJobIds.sort(null);
+                    int lastId = allJobIds.isEmpty() ? 0 : allJobIds.get(allJobIds.size() - 1);
+                    String id = String.format("%0" + 5 + "d", lastId + 1);
+                    String jobId = "J#" + id;
+
+                    Job job = new Job(jobId, companyId, jobTitle, jobDescription, jobPackage, experience, skills);
+                    int rowNum = sheet.getLastRowNum() + 1;
+                    Row row = sheet.createRow(rowNum);
+                    Cell cell = row.createCell(0);
+                    cell.setCellValue(job.getJobId());
+                    cell = row.createCell(1);
+                    cell.setCellValue(job.getCompanyId());
+                    cell = row.createCell(2);
+                    cell.setCellValue(job.getRoleTitle());
+                    cell = row.createCell(3);
+                    cell.setCellValue(job.getRoleDescription());
+                    cell = row.createCell(4);
+                    cell.setCellValue(job.getJobPackage());
+                    cell = row.createCell(5);
+                    cell.setCellValue(job.getRequiredExperience());
+                    cell = row.createCell(6);
+                    cell.setCellValue(job.getRequiredSkills());
+                    // Write to Excel file
+                    try (FileOutputStream outputStream = new FileOutputStream(DATABASE)) {
+                        workbook.write(outputStream);
+                        System.out.println("Excel file created successfully at the below location");
+                        System.out.println(Paths.get(DATABASE).toAbsolutePath());
+                    } catch (IOException e) {
+                        System.out.println("Error creating Excel file: " + e.getMessage());
+                    }
+                } else {
+                    return "Jobs sheet is not available in the excel file";
+                }
+                System.err.println(excelErrors);
+            } else {
+                return "File does not exist at the specified path";
+            }
+        } catch (IOException e) {
+            return "Error opening Excel file: " + e.getMessage();
+        }
+        return "true";
     }
 }

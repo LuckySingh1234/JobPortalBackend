@@ -128,4 +128,29 @@ public class MyResource {
             return Response.ok(responseJson.toString(), MediaType.APPLICATION_JSON).build();
         }
     }
+
+    @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Path("addJob")
+    public Response addJob(String reqData) {
+        JSONObject json = new JSONObject(reqData);
+        String companyId = json.getString("companyId");
+        String jobTitle = json.getString("jobTitle");
+        String jobDescription = json.getString("jobDescription");
+        String jobPackage = json.getString("package");
+        String experience = json.getString("experience");
+        String skills = json.getString("skills");
+
+        String jobAddedResponse = Job.addJob(companyId, jobTitle, jobDescription, jobPackage, experience, skills);
+        JSONObject responseJson = new JSONObject();
+        if (jobAddedResponse.equals("true")) {
+            responseJson.put("success", "true");
+            return Response.ok(responseJson.toString(), MediaType.APPLICATION_JSON).build();
+        } else {
+            responseJson.put("failure", "true");
+            responseJson.put("errorMessage", jobAddedResponse);
+            return Response.ok(responseJson.toString(), MediaType.APPLICATION_JSON).build();
+        }
+    }
 }
