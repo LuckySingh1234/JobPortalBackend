@@ -27,8 +27,11 @@ public class Job {
     private String jobPackage;
     private String requiredSkills;
     private String requiredExperience;
+    private String status;
 
     private static String JOB_SHEET_NAME = "Jobs";
+    private static String ACTIVE = "ACTIVE";
+    private static String DELETED = "DELETED";
 
     public static List<Job> fetchAllJobByCompanyId(String companyId) {
         List<Job> allJobs = new ArrayList<>();
@@ -56,7 +59,11 @@ public class Job {
                         String requiredSkills = cell.getStringCellValue();
                         cell = row.getCell(6);
                         String requiredExperience = cell.getStringCellValue();
-                        allJobs.add(new Job(jobId, companyId, roleTitle, roleDescription, jobPackage, requiredSkills, requiredExperience));
+                        cell = row.getCell(7);
+                        String status = cell.getStringCellValue();
+                        if (ACTIVE.equals(status)) {
+                            allJobs.add(new Job(jobId, companyId, roleTitle, roleDescription, jobPackage, requiredSkills, requiredExperience, status));
+                        }
                     }
                 }
             }
@@ -93,7 +100,7 @@ public class Job {
                     String id = String.format("%0" + 5 + "d", lastId + 1);
                     String jobId = "J#" + id;
 
-                    Job job = new Job(jobId, companyId, jobTitle, jobDescription, jobPackage, experience, skills);
+                    Job job = new Job(jobId, companyId, jobTitle, jobDescription, jobPackage, experience, skills, ACTIVE);
                     int rowNum = sheet.getLastRowNum() + 1;
                     Row row = sheet.createRow(rowNum);
                     Cell cell = row.createCell(0);
@@ -110,6 +117,50 @@ public class Job {
                     cell.setCellValue(job.getRequiredExperience());
                     cell = row.createCell(6);
                     cell.setCellValue(job.getRequiredSkills());
+                    // Write to Excel file
+                    try (FileOutputStream outputStream = new FileOutputStream(DATABASE)) {
+                        workbook.write(outputStream);
+                        System.out.println("Excel file created successfully at the below location");
+                        System.out.println(Paths.get(DATABASE).toAbsolutePath());
+                    } catch (IOException e) {
+                        System.out.println("Error creating Excel file: " + e.getMessage());
+                    }
+                } else {
+                    return "Jobs sheet is not available in the excel file";
+                }
+                System.err.println(excelErrors);
+            } else {
+                return "File does not exist at the specified path";
+            }
+        } catch (IOException e) {
+            return "Error opening Excel file: " + e.getMessage();
+        }
+        return "true";
+    }
+
+    public static String removeJob(String jobId) {
+        try {
+            Workbook workbook;
+            if (Files.exists(Paths.get(DATABASE))) {
+                FileInputStream fis = new FileInputStream(DATABASE);
+                workbook = WorkbookFactory.create(fis);
+                Sheet sheet = workbook.getSheet(JOB_SHEET_NAME);
+                StringBuilder excelErrors = new StringBuilder();
+                Row jobRowToBeDeleted = null;
+                if (sheet != null) {
+                    for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+                        Row row = sheet.getRow(i);
+                        Cell cell = row.getCell(0);
+                        String storedJobId = cell.getStringCellValue();
+                        if (storedJobId.equals(jobId)) {
+                            jobRowToBeDeleted = row;
+                        }
+                    }
+                    if (jobRowToBeDeleted == null) {
+                        return "Job Id does not exist";
+                    }
+                    Cell cell = jobRowToBeDeleted.getCell(7);
+                    cell.setCellValue(DELETED);
                     // Write to Excel file
                     try (FileOutputStream outputStream = new FileOutputStream(DATABASE)) {
                         workbook.write(outputStream);

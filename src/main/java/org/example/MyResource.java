@@ -153,4 +153,47 @@ public class MyResource {
             return Response.ok(responseJson.toString(), MediaType.APPLICATION_JSON).build();
         }
     }
+
+    @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Path("addCompany")
+    public Response addCompany(String reqData) {
+        JSONObject json = new JSONObject(reqData);
+        String companyName = json.getString("companyName");
+        String companyDescription = json.getString("companyDescription");
+        String location = json.getString("location");
+        String imageUrl = json.getString("imageUrl");
+
+        String companyAddedResponse = Company.addCompany(companyName, companyDescription, location, imageUrl);
+        JSONObject responseJson = new JSONObject();
+        if (companyAddedResponse.equals("true")) {
+            responseJson.put("success", "true");
+            return Response.ok(responseJson.toString(), MediaType.APPLICATION_JSON).build();
+        } else {
+            responseJson.put("failure", "true");
+            responseJson.put("errorMessage", companyAddedResponse);
+            return Response.ok(responseJson.toString(), MediaType.APPLICATION_JSON).build();
+        }
+    }
+
+    @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Path("removeJob")
+    public Response removeJob(String reqData) {
+        JSONObject json = new JSONObject(reqData);
+        String jobId = json.getString("jobId");
+
+        String jobRemovedResponse = Job.removeJob(jobId);
+        JSONObject responseJson = new JSONObject();
+        if (jobRemovedResponse.equals("true")) {
+            responseJson.put("success", "true");
+            return Response.ok(responseJson.toString(), MediaType.APPLICATION_JSON).build();
+        } else {
+            responseJson.put("failure", "true");
+            responseJson.put("errorMessage", jobRemovedResponse);
+            return Response.ok(responseJson.toString(), MediaType.APPLICATION_JSON).build();
+        }
+    }
 }
