@@ -31,8 +31,21 @@ public class JobApplication {
                 FileInputStream fis = new FileInputStream(DATABASE);
                 workbook = WorkbookFactory.create(fis);
                 Sheet sheet = workbook.getSheet(JOB_SHEET_NAME);
-                StringBuilder excelErrors = new StringBuilder();
                 if (sheet != null) {
+                    for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+                        Row row = sheet.getRow(i);
+
+                        Cell cell = row.getCell(0);
+                        String storedJobId = cell.getStringCellValue();
+
+                        cell = row.getCell(1);
+                        String storedUserId = cell.getStringCellValue();
+
+                        if (storedJobId.equals(jobId) && storedUserId.equals(userId)) {
+                            return "You have already applied for this job";
+                        }
+                    }
+
                     JobApplication jobApplication = new JobApplication(jobId, userId, APPLIED);
                     int rowNum = sheet.getLastRowNum() + 1;
                     Row row = sheet.createRow(rowNum);
@@ -53,7 +66,6 @@ public class JobApplication {
                 } else {
                     return "Job applications sheet is not available in the excel file";
                 }
-                System.err.println(excelErrors);
             } else {
                 return "File does not exist at the specified path";
             }
