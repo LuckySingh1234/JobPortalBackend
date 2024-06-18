@@ -196,4 +196,35 @@ public class MyResource {
             return Response.ok(responseJson.toString(), MediaType.APPLICATION_JSON).build();
         }
     }
+
+    @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Path("saveResume")
+    public Response saveResume(String reqData) {
+        JSONObject json = new JSONObject(reqData);
+        String userId = json.getString("userId");
+        String name = json.getString("name");
+        String dob = json.getString("dob");
+        String email = json.getString("email");
+        String institutionName = json.getString("institutionName");
+        String degree = json.getString("degree");
+        String yearOfGraduation = json.getString("yearOfGraduation");
+        String companyName = json.getString("companyName");
+        String role = json.getString("role");
+        String duration = json.getString("duration");
+        String responsibilities = json.getString("responsibilities");
+
+        String savedResumeResponse = Resume.saveResume(userId, name, dob, email, institutionName,
+                degree, yearOfGraduation, companyName, role, duration, responsibilities);
+        JSONObject responseJson = new JSONObject();
+        if (savedResumeResponse.equals("true")) {
+            responseJson.put("success", "true");
+            return Response.ok(responseJson.toString(), MediaType.APPLICATION_JSON).build();
+        } else {
+            responseJson.put("failure", "true");
+            responseJson.put("errorMessage", savedResumeResponse);
+            return Response.ok(responseJson.toString(), MediaType.APPLICATION_JSON).build();
+        }
+    }
 }
