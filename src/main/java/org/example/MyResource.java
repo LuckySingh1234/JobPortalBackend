@@ -227,4 +227,49 @@ public class MyResource {
             return Response.ok(responseJson.toString(), MediaType.APPLICATION_JSON).build();
         }
     }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Path("getAllUsersJobApplications")
+    public Response getAllUsersJobApplications() {
+        List<JobApplicationDetails> allJobApplicationDetails = JobApplication.fetchAllUsersJobApplications();
+        Gson gson = new Gson();
+        JsonElement jobsJson = gson.toJsonTree(allJobApplicationDetails);
+        return Response.ok(jobsJson.toString(), MediaType.APPLICATION_JSON).build();
+    }
+
+    @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Path("getAllJobApplicationsByUserId")
+    public Response getAllJobApplicationsByUserId(String reqData) {
+        JSONObject json = new JSONObject(reqData);
+        String userId = json.getString("userId");
+        List<JobApplicationDetails> allJobApplicationDetails = JobApplication.fetchAllJobApplicationsByUserId(userId);
+        Gson gson = new Gson();
+        JsonElement jobsJson = gson.toJsonTree(allJobApplicationDetails);
+        return Response.ok(jobsJson.toString(), MediaType.APPLICATION_JSON).build();
+    }
+
+    @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Path("updateJobApplicationStatus")
+    public Response updateJobApplicationStatus(String reqData) {
+        JSONObject json = new JSONObject(reqData);
+        String jobId = json.getString("jobId");
+        String userId = json.getString("userId");
+        String status = json.getString("status");
+        String updateJobApplicationStatusResponse = JobApplication.updateJobApplicationStatus(jobId, userId, status);
+        JSONObject responseJson = new JSONObject();
+        if (updateJobApplicationStatusResponse.equals("true")) {
+            responseJson.put("success", "true");
+            return Response.ok(responseJson.toString(), MediaType.APPLICATION_JSON).build();
+        } else {
+            responseJson.put("failure", "true");
+            responseJson.put("errorMessage", updateJobApplicationStatusResponse);
+            return Response.ok(responseJson.toString(), MediaType.APPLICATION_JSON).build();
+        }
+    }
 }
