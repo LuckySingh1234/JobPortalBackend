@@ -272,4 +272,17 @@ public class MyResource {
             return Response.ok(responseJson.toString(), MediaType.APPLICATION_JSON).build();
         }
     }
+
+    @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Path("getResumeByUserId")
+    public Response getResumeByUserId(String reqData) {
+        JSONObject json = new JSONObject(reqData);
+        String userId = json.getString("userId");
+        Resume resume = Resume.fetchResumeByUserId(userId);
+        Gson gson = new Gson();
+        JsonElement companyJson = gson.toJsonTree(resume);
+        return Response.ok(companyJson.toString(), MediaType.APPLICATION_JSON).build();
+    }
 }

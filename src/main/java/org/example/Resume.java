@@ -54,12 +54,11 @@ public class Resume {
                     }
                     Resume resume = new Resume(userId, name, dob, email, institutionName, degree,
                             yearOfGraduation, companyName, role, duration, responsibilities);
-//                    if (storedUserIds.contains(userId)) {
-//                        saveResumeResponse = editResume(resume);
-//                    } else {
-//                        saveResumeResponse = addResume(resume);
-//                    }
-                    saveResumeResponse = addResume(resume);
+                    if (storedUserIds.contains(userId)) {
+                        saveResumeResponse = editResume(resume);
+                    } else {
+                        saveResumeResponse = addResume(resume);
+                    }
                 } else {
                     return "Resume sheet is not available in the excel file";
                 }
@@ -127,7 +126,100 @@ public class Resume {
         return "true";
     }
 
-//    private static String saveResume(Resume resume) {
-//
-//    }
+    private static String editResume(Resume resume) {
+        try {
+            Workbook workbook;
+            if (Files.exists(Paths.get(DATABASE))) {
+                FileInputStream fis = new FileInputStream(DATABASE);
+                workbook = WorkbookFactory.create(fis);
+                Sheet sheet = workbook.getSheet(RESUME_SHEET_NAME);
+                StringBuilder excelErrors = new StringBuilder();
+                Row resumeRowToBeUpdated = null;
+                if (sheet != null) {
+                    for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+                        Row row = sheet.getRow(i);
+                        Cell cell = row.getCell(0);
+                        String storedUserId = cell.getStringCellValue();
+                        if (storedUserId.equals(resume.getUserId())) {
+                            resumeRowToBeUpdated = row;
+                        }
+                    }
+                    if (resumeRowToBeUpdated == null) {
+                        return "User Id does not exist";
+                    }
+                    resumeRowToBeUpdated.getCell(1).setCellValue(resume.getName());
+                    resumeRowToBeUpdated.getCell(2).setCellValue(resume.getDob());
+                    resumeRowToBeUpdated.getCell(3).setCellValue(resume.getEmail());
+                    resumeRowToBeUpdated.getCell(4).setCellValue(resume.getInstitutionName());
+                    resumeRowToBeUpdated.getCell(5).setCellValue(resume.getDegree());
+                    resumeRowToBeUpdated.getCell(6).setCellValue(resume.getYearOfGraduation());
+                    resumeRowToBeUpdated.getCell(7).setCellValue(resume.getCompanyName());
+                    resumeRowToBeUpdated.getCell(8).setCellValue(resume.getRole());
+                    resumeRowToBeUpdated.getCell(9).setCellValue(resume.getDuration());
+                    resumeRowToBeUpdated.getCell(10).setCellValue(resume.getResponsibilities());
+                    // Write to Excel file
+                    try (FileOutputStream outputStream = new FileOutputStream(DATABASE)) {
+                        workbook.write(outputStream);
+                        System.out.println("Excel file created successfully at the below location");
+                        System.out.println(Paths.get(DATABASE).toAbsolutePath());
+                    } catch (IOException e) {
+                        System.out.println("Error creating Excel file: " + e.getMessage());
+                    }
+                } else {
+                    return "Resume sheet is not available in the excel file";
+                }
+                System.err.println(excelErrors);
+            } else {
+                return "File does not exist at the specified path";
+            }
+        } catch (IOException e) {
+            return "Error opening Excel file: " + e.getMessage();
+        }
+        return "true";
+    }
+
+    public static Resume fetchResumeByUserId(String userId) {
+        try {
+            Workbook workbook;
+            FileInputStream fis = new FileInputStream(DATABASE);
+            workbook = WorkbookFactory.create(fis);
+            Sheet sheet = workbook.getSheet(RESUME_SHEET_NAME);
+            if (sheet != null) {
+                for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+                    Row row = sheet.getRow(i);
+
+                    Cell cell = row.getCell(0);
+                    String storedUserId = cell.getStringCellValue();
+                    if (storedUserId.equals(userId)) {
+                        cell = row.getCell(1);
+                        String name = cell.getStringCellValue();
+                        cell = row.getCell(2);
+                        String dob = cell.getStringCellValue();
+                        cell = row.getCell(3);
+                        String email = cell.getStringCellValue();
+                        cell = row.getCell(4);
+                        String institutionName = cell.getStringCellValue();
+                        cell = row.getCell(5);
+                        String degree = cell.getStringCellValue();
+                        cell = row.getCell(6);
+                        String yearOfGraduation = cell.getStringCellValue();
+                        cell = row.getCell(7);
+                        String companyName = cell.getStringCellValue();
+                        cell = row.getCell(8);
+                        String role = cell.getStringCellValue();
+                        cell = row.getCell(9);
+                        String duration = cell.getStringCellValue();
+                        cell = row.getCell(10);
+                        String responsibilities = cell.getStringCellValue();
+                        return new Resume(userId, name, dob, email, institutionName, degree, yearOfGraduation,
+                                companyName, role, duration, responsibilities);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Exception occurred while fetching resume by user id");
+            e.printStackTrace();
+        }
+        return null;
+    }
 }
